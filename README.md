@@ -1,6 +1,7 @@
 ![Thumbnail](images/thumbnail.png)
 # Trusted identity handling framework for digital transformation
 ![image](https://img.shields.io/badge/License-MIT-green)
+
 This repository houses a source code of a proof-of-concept implementation of an EIDAS-compatible digital identity ecosystem. The present project is written in PHP and designed to run on Apache web servers as several separate nodes of a framework.
 
 ## SID 2023
