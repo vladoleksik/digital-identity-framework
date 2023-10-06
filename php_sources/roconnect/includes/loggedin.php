@@ -1,3 +1,5 @@
+
+
 <div class="login-card text-center px-5 py-4 rounded shadow">
     <h5 class="mb-3" style="font-weight: 400;">V-ați conectat ca</h2>
     <h2 class="mb-3" style="font-weight: 600;"><?php echo $_SESSION['preferred_username']; ?></h2>

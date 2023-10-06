@@ -252,7 +252,23 @@
                 <img src="../resources/connect.png" alt="Logo" height="32" class="d-inline-block align-text-middle">
                 <span style="font-weight: 500;">Ro-</span>Connect
             </a>
-            
+            <?php
+            ini_set('session.session_use_only_cookies',1);
+            ini_set('session.use_strict_mode',1);
+        
+            session_set_cookie_params([
+                'domain' => 'roconnect.localhost',
+                'path' => '/',
+                'secure' => true,
+                'httponly' => true
+            ]);
+            session_name("Ro-Connect_session");
+            session_start();
+              if(isset($_SESSION['sub']))
+              {
+                echo '<a href="../history"><button type="button" class="btn btn-light">Istoric accesări</button></a>';
+              }
+            ?>
             <!--<span class="d-flex">
                 <button class="btn border border-black border-2 btn-light" style="font-weight:600;" type="submit"><img class="me-1" src="connect.png" height="24">Conectare</button>
             </span>-->
@@ -284,17 +300,7 @@
     <div class="mx-5 mt-3">
         <div class="d-flex flex-row align-items-stretch flex-wrap justify-content-evenly mx-5 mb-3">
             <?php
-            ini_set('session.session_use_only_cookies',1);
-            ini_set('session.use_strict_mode',1);
-        
-            session_set_cookie_params([
-                'domain' => 'roconnect.localhost',
-                'path' => '/',
-                'secure' => true,
-                'httponly' => true
-            ]);
-            session_name("Ro-Connect_session");
-            session_start();
+            
             $login_required = true;
             if(isset($_SESSION['sub'])){
               if(isset($_SESSION['eidas_level']) && $_SESSION['eidas_level'] >= $accred )
@@ -312,6 +318,69 @@
             }
             //$login_required = false; //!!!!!!!!!!!!!!!!!!!!!! De comentat dupa lucrul la pagina "Logged in"!!!
             if(!$login_required){
+              $query = "SELECT * FROM history WHERE sub = :sub AND ip = :ip;";
+              $stmt = $pdo->prepare($query);
+              $stmt->bindParam(":sub", $_SESSION['sub']);
+              $stmt->bindParam(":ip", $_SERVER['REMOTE_ADDR']);
+              $stmt->execute();
+              $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+              $first_time = false;
+              $stmt = null;
+              if(sizeof($result)==0)
+              {
+                $first_time = true;
+              }
+
+              if($first_time)
+              {
+                $query = "SELECT email FROM emails WHERE sub = :sub;";
+                $stmt = $pdo->prepare($query);
+                $stmt->bindParam(":sub", $_SESSION['sub']);
+                $stmt->execute();
+                $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                $timp = time();
+                $timestamp = date('Y-m-d H:i:s', $timp);
+                if(sizeof($result)>0)
+                {
+                  
+                  $addr=$result[0]['email'];
+                  //echo $addr;
+                  //$url = 'https://script.google.com/macros/s/AKfycbwfK5Ta5Nnb2HDZDnbdI_cLOMUCPyU8koi536hp7XtGqNrPUS3z9AM80ASRpdAwNIVTBg/exec'
+                  //$url = 'https://script.google.com/macros/s/AKfycby3CTJg7tvy2oUoDOSiYdt9gfq2dzFKH5f7RpRjEgmi25BR4muQgWm3Vw9MoR8v6Gxa1g/exec?addr=' . $addr . '&ip=' . $_SERVER['REMOTE_ADDR'] . "&time=" . $timestamp;
+                  //$url = 'https://script.google.com/macros/s/AKfycbxSqGAQrQsee8wXOJtMUTADc8Dz0q3SiPO_MlrXbN4jCgf0agjKhZoOsS7vImeO-XPg7Q/exec?addr=' . urlencode($addr) . '&ip=' . urlencode($_SERVER['REMOTE_ADDR']) . "&time=" . urlencode($timestamp);
+                  $url = 'https://script.google.com/macros/s/AKfycbx28x3TcAxGRcYCalgTftyYX6hoXhl56YigYWzAjip9IsyVapf3VFyBkYpB_ULrHGMtzg/exec?addr=' . urlencode($addr) . '&ip=' . urlencode($_SERVER['REMOTE_ADDR']) . "&time=" . urlencode($timestamp);
+                  
+                  //echo $url;
+                  $ch = curl_init();
+                  curl_setopt($ch, CURLOPT_URL, $url);
+                  curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true); //true
+                  curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2); //2
+                  curl_setopt($ch, CURLOPT_HEADER, 0);
+                  //curl_setopt( $ch, CURLOPT_CUSTOMREQUEST, 'GET' );
+                  //curl_setopt( $ch, CURLOPT_POSTFIELDS, null );
+                  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); 
+              
+                  $result = curl_exec($ch);
+                  //echo $result;
+                  //print_r(curl_getinfo($ch));
+                  //var_dump($error_msg);
+                  curl_close($ch);
+                }
+                $stmt = null;
+              }
+              
+              $query = "INSERT INTO history (timp, sub, ip) VALUES (:timp,:sub,:ip);";
+              $stmt = $pdo->prepare($query);
+              $timp = time();
+              $timestamp = date('Y-m-d H:i:s', $timp);
+              $stmt->bindParam(":sub", $_SESSION['sub']);
+              $stmt->bindParam(":ip", $_SERVER['REMOTE_ADDR']);
+              $stmt->bindParam(":timp", $timestamp);
+              $stmt->execute();
+              $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+              $stmt = null;
+
+  
               include "../includes/loggedin.php";
             }
             else
